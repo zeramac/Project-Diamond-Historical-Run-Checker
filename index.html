@@ -694,7 +694,10 @@
 
   async function fileToWorkbook(file){
     const buf = await file.arrayBuffer();
-    return XLSX.read(buf, { type: 'array', cellDates: false });
+    // dense:true stores rows as plain arrays instead of one object property per cell.
+    // Without it, large exports (hundreds of thousands of rows) can throw
+    // "Too many properties to enumerate" or hang the browser tab.
+    return XLSX.read(buf, { type: 'array', cellDates: false, dense: true });
   }
 
   // ---------- HISTORICAL processing (generic Advertiser/Product/Brand, tagged with currentSystem) ----------
