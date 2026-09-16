@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Diamond — New Entrant Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#151a18;
+    --paper:#eef1ee;
+    --panel:#ffffff;
+    --line:#d7ddd8;
+    --line-soft:#e6e9e5;
+    --teal:#0b6e4f;
+    --teal-dark:#08543c;
+    --amber:#c9822c;
+    --amber-soft:#fbeedb;
+    --red:#a4372a;
+    --muted:#5b655f;
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:80px;
+  }
+  h1,h2,h3{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  /* ---------- header ---------- */
+  header.top{
+    background:var(--ink);
+    color:#f2f4f2;
+    padding:34px clamp(20px,4vw,56px) 30px;
+    border-bottom:4px solid var(--teal);
+  }
+  header.top .kicker{
+    color:#9fb8ac;
+    font-size:13px;
+    margin-bottom:8px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  header.top h1{
+    font-size:clamp(24px,3vw,34px);
+    color:#fdfdfb;
+  }
+  header.top p{
+    max-width:64ch;
+    color:#c7cec9;
+    font-size:15px;
+    line-height:1.55;
+    margin-top:12px;
+  }
+
+  main{
+    max-width:1180px;
+    margin:0 auto;
+    padding:36px clamp(16px,4vw,40px) 0;
+  }
+
+  .steps{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+  }
+  @media (max-width:880px){ .steps{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    display:flex;
+    flex-direction:column;
+    min-height:100%;
+  }
+  .panel-head{
+    padding:20px 22px 16px;
+    border-bottom:1px solid var(--line-soft);
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .panel-head .step-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--teal-dark);
+    border:1px solid var(--teal-dark);
+    border-radius:50%;
+    width:22px;height:22px;
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .panel-head h2{font-size:18px;}
+  .panel-head .sub{
+    color:var(--muted);
+    font-size:13px;
+    padding:0 22px 14px;
+    margin-top:-6px;
+    line-height:1.5;
+  }
+
+  .drop{
+    margin:0 22px 18px;
+    border:1.5px dashed var(--line);
+    border-radius:4px;
+    padding:22px;
+    text-align:center;
+    color:var(--muted);
+    font-size:13.5px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+    background:#fafbfa;
+  }
+  .drop:hover, .drop.drag{
+    border-color:var(--teal);
+    background:#f1f7f4;
+    color:var(--teal-dark);
+  }
+  .drop strong{color:var(--ink);}
+  .drop input{display:none;}
+
+  .file-list{
+    padding:0 22px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    flex:1;
+  }
+  .file-row{
+    border:1px solid var(--line-soft);
+    border-radius:3px;
+    padding:10px 12px;
+    display:grid;
+    grid-template-columns:1fr auto auto auto;
+    align-items:center;
+    gap:10px;
+    font-size:13px;
+    background:#fbfcfb;
+  }
+  .file-row .fname{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-weight:500;
+  }
+  .file-row .fmeta{
+    color:var(--muted);
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .file-row select{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:3px 6px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .file-row .status{
+    font-size:11px;
+    font-family:'IBM Plex Mono', monospace;
+    padding:2px 7px;
+    border-radius:9px;
+    white-space:nowrap;
+  }
+  .status.ok{background:#e2f2e9;color:var(--teal-dark);}
+  .status.err{background:#f7e3df;color:var(--red);}
+  .file-row button.remove{
+    border:none;background:none;color:var(--muted);cursor:pointer;
+    font-size:16px;line-height:1;padding:2px 4px;
+  }
+  .file-row button.remove:hover{color:var(--red);}
+
+  .empty-note{
+    color:#8b948e;
+    font-size:13px;
+    padding:8px 22px 20px;
+    font-style:italic;
+  }
+
+  /* ---------- stats + actions ---------- */
+  .action-bar{
+    margin-top:28px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  button.primary{
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    padding:13px 26px;
+    font-size:14.5px;
+    font-weight:600;
+    border-radius:3px;
+    cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+    transition:background .15s;
+  }
+  button.primary:hover{background:var(--teal-dark);}
+  button.primary:disabled{background:#b9c2bd;cursor:not-allowed;}
+
+  button.ghost{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:12px 18px;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:13.5px;
+  }
+  button.ghost:hover{border-color:var(--red);color:var(--red);}
+
+  .stat-strip{
+    margin-top:8px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  /* ---------- results ---------- */
+  section.results{
+    margin-top:40px;
+    border-top:1px solid var(--line);
+    padding-top:32px;
+  }
+  .results-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .results-head h2{font-size:20px;}
+  .results-head .count{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--amber);
+    font-weight:600;
+  }
+  .stat-cards{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:26px;
+  }
+  @media (max-width:760px){ .stat-cards{grid-template-columns:repeat(2,1fr);} }
+  .stat-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:16px 18px;
+  }
+  .stat-card .num{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px;
+    font-weight:600;
+  }
+  .stat-card .label{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .stat-card.highlight .num{color:var(--amber);}
+
+  .table-wrap{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:auto;
+    max-height:560px;
+  }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    font-size:13px;
+  }
+  thead th{
+    position:sticky;top:0;
+    background:var(--ink);
+    color:#eef1ee;
+    text-align:left;
+    padding:11px 14px;
+    font-weight:500;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+  }
+  tbody td{
+    padding:9px 14px;
+    border-bottom:1px solid var(--line-soft);
+    vertical-align:top;
+  }
+  tbody tr:hover{background:#f7f9f6;}
+  tbody tr:nth-child(even){background:#fbfcfb;}
+  tbody tr:nth-child(even):hover{background:#f4f7f4;}
+
+  .download-row{
+    margin-top:22px;
+    display:flex;
+    gap:14px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    padding:50px 20px;
+    font-size:14px;
+  }
+
+  footer.note{
+    max-width:1180px;
+    margin:60px auto 0;
+    padding:0 clamp(16px,4vw,40px);
+    color:#8b948e;
+    font-size:12px;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="kicker">PROJECT DIAMOND — TOTAL PHARMA + PC</div>
+  <h1>New Entrant Finder</h1>
+  <p>Upload the historical monitoring exports on one side and the latest competitive brand list on the other. The tool matches on Advertiser + Product + Brand and returns every combination in the new run that has never shown up before.</p>
+</header>
+
+<main>
+
+  <div class="steps">
+
+    <!-- HISTORICAL -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="step-num">1</span>
+        <h2>Historical runs</h2>
+      </div>
+      <div class="sub">TV, Digital, OOH, Print, and Radio exports (.csv or .xlsx). Add as many as you have — media type is guessed from the filename and can be corrected below.</div>
+
+      <div class="drop" id="drop-hist">
+        <div><strong>Drop files here</strong> or click to browse</div>
+        <div style="margin-top:4px;">.csv, .xlsx, .xls — multiple files accepted</div>
+        <input type="file" id="input-hist" multiple accept=".csv,.xlsx,.xls">
+      </div>
+
+      <div class="file-list" id="list-hist"></div>
+      <div class="empty-note" id="empty-hist">No historical files loaded yet.</div>
+    </div>
+
+    <!-- NEW RUN -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="step-num">2</span>
+        <h2>New data run</h2>
+      </div>
+      <div class="sub">The latest Competitive Brand List export (or similar) with Category, Sub-Category, Advertiser, Product and Brand columns.</div>
+
+      <div class="drop" id="drop-new">
+        <div><strong>Drop files here</strong> or click to browse</div>
+        <div style="margin-top:4px;">.csv, .xlsx, .xls — multiple files accepted</div>
+        <input type="file" id="input-new" multiple accept=".csv,.xlsx,.xls">
+      </div>
+
+      <div class="file-list" id="list-new"></div>
+      <div class="empty-note" id="empty-new">No new-run files loaded yet.</div>
+    </div>
+
+  </div>
+
+  <div class="action-bar">
+    <button class="primary" id="btn-compare" disabled>Find new brands</button>
+    <button class="ghost" id="btn-reset">Clear everything</button>
+  </div>
+  <div class="stat-strip" id="pre-stat">Load at least one historical file and one new-run file to compare.</div>
+
+  <section class="results" id="results" style="display:none;">
+    <div class="results-head">
+      <h2>New brand combinations</h2>
+      <div class="count" id="result-count"></div>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="num" id="stat-hist-combos">0</div>
+        <div class="label">Unique Advertiser/Product/Brand combos, historical</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="stat-new-rows">0</div>
+        <div class="label">Rows read from new-run file(s)</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="stat-new-combos">0</div>
+        <div class="label">Unique combos in new run</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="num" id="stat-diff">0</div>
+        <div class="label">Not seen in any historical file</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Sub-Category</th>
+            <th>Advertiser</th>
+            <th>Product</th>
+            <th>Brand</th>
+          </tr>
+        </thead>
+        <tbody id="result-body"></tbody>
+      </table>
+    </div>
+
+    <div class="download-row">
+      <button class="primary" id="btn-download">Download as Excel (.xlsx)</button>
+      <span class="stat-strip" id="download-note"></span>
+    </div>
+  </section>
+
+</main>
+
+<footer class="note">
+  Runs entirely in your browser — files are parsed locally and never uploaded anywhere. Matching is exact on the trimmed, case-insensitive combination of Advertiser, Product and Brand, so near-duplicate spellings between the historical and new-run files (e.g. an extra space or a different case) will still be treated as the same brand, but genuinely different naming will show up as "new."
+</footer>
+
+<script>
+(function(){
+
+  // ---------- state ----------
+  let histFiles = [];   // {id, name, type, rowCount, comboCount, status, error}
+  let newFiles  = [];   // {id, name, rowCount, status, error}
+  let historicalKeys = new Set();
+  let newRunRows = [];  // {category, subCategory, advertiser, product, brand, key}
+  let uid = 0;
+
+  const MEDIA_PATTERNS = [
+    ['TV', /\btv\b/i],
+    ['Digital', /\bdigital\b/i],
+    ['OOH', /\booh\b/i],
+    ['Radio', /\bradio\b/i],
+    ['Print', /\bprint\b/i],
+  ];
+
+  function detectMediaType(filename){
+    for (const [label, re] of MEDIA_PATTERNS){
+      if (re.test(filename)) return label;
+    }
+    return 'Unknown';
+  }
+
+  function norm(v){
+    return (v === null || v === undefined) ? '' : v.toString().trim().replace(/\s+/g,' ');
+  }
+  function normKey(v){
+    return norm(v).toUpperCase();
+  }
+  function makeKey(adv, prod, brand){
+    return normKey(adv) + '\u241F' + normKey(prod) + '\u241F' + normKey(brand);
+  }
+
+  // Scan a sheet (array-of-arrays) for a header row containing every required column.
+  // requiredCols: { key: [acceptable header variants, lowercase] }
+  function findHeader(rows, requiredCols){
+    const keys = Object.keys(requiredCols);
+    for (let r = 0; r < rows.length; r++){
+      const row = rows[r];
+      if (!row || !row.length) continue;
+      const lower = row.map(c => norm(c).toLowerCase());
+      const colMap = {};
+      let allFound = true;
+      for (const key of keys){
+        const variants = requiredCols[key];
+        let idx = -1;
+        for (const v of variants){
+          idx = lower.indexOf(v);
+          if (idx !== -1) break;
+        }
+        if (idx === -1){ allFound = false; break; }
+        colMap[key] = idx;
+      }
+      if (allFound) return { headerRow: r, colMap };
+    }
+    return null;
+  }
+
+  function sheetToRows(sheet){
+    return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+  }
+
+  async function fileToWorkbook(file){
+    const buf = await file.arrayBuffer();
+    return XLSX.read(buf, { type: 'array', cellDates: false });
+  }
+
+  // ---------- HISTORICAL processing ----------
+  async function processHistoricalFile(entry, file){
+    const required = {
+      advertiser: ['advertiser'],
+      product: ['product'],
+      brand: ['brand'],
+    };
+    try {
+      const wb = await fileToWorkbook(file);
+      let totalRows = 0, comboSet = new Set(), found = false;
+
+      for (const sheetName of wb.SheetNames){
+        const rows = sheetToRows(wb.Sheets[sheetName]);
+        const hdr = findHeader(rows, required);
+        if (!hdr) continue;
+        found = true;
+        for (let r = hdr.headerRow + 1; r < rows.length; r++){
+          const row = rows[r];
+          if (!row) continue;
+          const adv = row[hdr.colMap.advertiser];
+          const prod = row[hdr.colMap.product];
+          const brand = row[hdr.colMap.brand];
+          if (!norm(adv) && !norm(prod) && !norm(brand)) continue;
+          const key = makeKey(adv, prod, brand);
+          historicalKeys.add(key);
+          comboSet.add(key);
+          totalRows++;
+        }
+      }
+
+      if (!found){
+        entry.status = 'err';
+        entry.error = 'No Advertiser/Product/Brand header row found';
+        entry.rowCount = 0;
+        entry.comboCount = 0;
+      } else {
+        entry.status = 'ok';
+        entry.rowCount = totalRows;
+        entry.comboCount = comboSet.size;
+      }
+    } catch (e){
+      entry.status = 'err';
+      entry.error = 'Could not read file (' + (e.message || 'parse error') + ')';
+    }
+  }
+
+  // ---------- NEW RUN processing ----------
+  async function processNewRunFile(entry, file){
+    const required = {
+      category: ['category'],
+      subCategory: ['sub-category', 'sub category', 'subcategory'],
+      advertiser: ['advertiser'],
+      product: ['product'],
+      brand: ['brand'],
+    };
+    try {
+      const wb = await fileToWorkbook(file);
+      let totalRows = 0, found = false;
+
+      for (const sheetName of wb.SheetNames){
+        const rows = sheetToRows(wb.Sheets[sheetName]);
+        const hdr = findHeader(rows, required);
+        if (!hdr) continue;
+        found = true;
+        for (let r = hdr.headerRow + 1; r < rows.length; r++){
+          const row = rows[r];
+          if (!row) continue;
+          const category = norm(row[hdr.colMap.category]);
+          const subCategory = norm(row[hdr.colMap.subCategory]);
+          const adv = norm(row[hdr.colMap.advertiser]);
+          const prod = norm(row[hdr.colMap.product]);
+          const brand = norm(row[hdr.colMap.brand]);
+          if (!adv && !prod && !brand) continue;
+          const key = makeKey(adv, prod, brand);
+          newRunRows.push({ category, subCategory, advertiser: adv, product: prod, brand, key });
+          totalRows++;
+        }
+      }
+
+      if (!found){
+        entry.status = 'err';
+        entry.error = 'No Category/Sub-Category/Advertiser/Product/Brand header row found';
+        entry.rowCount = 0;
+      } else {
+        entry.status = 'ok';
+        entry.rowCount = totalRows;
+      }
+    } catch (e){
+      entry.status = 'err';
+      entry.error = 'Could not read file (' + (e.message || 'parse error') + ')';
+    }
+  }
+
+  // ---------- rendering ----------
+  function renderHistList(){
+    const list = document.getElementById('list-hist');
+    const empty = document.getElementById('empty-hist');
+    list.innerHTML = '';
+    empty.style.display = histFiles.length ? 'none' : 'block';
+    for (const entry of histFiles){
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      const typeOptions = ['TV','Digital','OOH','Print','Radio','Unknown']
+        .map(t => `<option value="${t}" ${t===entry.type?'selected':''}>${t}</option>`).join('');
+      row.innerHTML = `
+        <span class="fname" title="${entry.name}">${entry.name}</span>
+        <select data-id="${entry.id}" class="type-select">${typeOptions}</select>
+        <span class="fmeta">${entry.status==='ok' ? entry.rowCount.toLocaleString()+' rows' : ''}</span>
+        <span class="status ${entry.status}">${entry.status==='ok' ? 'parsed' : 'error'}</span>
+        <button class="remove" data-id="${entry.id}" title="Remove">&times;</button>
+      `;
+      if (entry.status === 'err'){
+        row.title = entry.error;
+        row.style.borderColor = '#eccbc3';
+      }
+      list.appendChild(row);
+    }
+    list.querySelectorAll('.type-select').forEach(sel=>{
+      sel.addEventListener('change', e=>{
+        const id = Number(e.target.dataset.id);
+        const entry = histFiles.find(f=>f.id===id);
+        if (entry) entry.type = e.target.value;
+      });
+    });
+    list.querySelectorAll('button.remove').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const id = Number(e.target.dataset.id);
+        histFiles = histFiles.filter(f=>f.id!==id);
+        await rebuildHistorical();
+      });
+    });
+    updateCompareState();
+  }
+
+  function renderNewList(){
+    const list = document.getElementById('list-new');
+    const empty = document.getElementById('empty-new');
+    list.innerHTML = '';
+    empty.style.display = newFiles.length ? 'none' : 'block';
+    for (const entry of newFiles){
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      row.style.gridTemplateColumns = '1fr auto auto';
+      row.innerHTML = `
+        <span class="fname" title="${entry.name}">${entry.name}</span>
+        <span class="fmeta">${entry.status==='ok' ? entry.rowCount.toLocaleString()+' rows' : ''}</span>
+        <span class="status ${entry.status}">${entry.status==='ok' ? 'parsed' : 'error'}</span>
+        <button class="remove" data-id="${entry.id}" title="Remove">&times;</button>
+      `;
+      if (entry.status === 'err'){
+        row.title = entry.error;
+        row.style.borderColor = '#eccbc3';
+      }
+      list.appendChild(row);
+    }
+    list.querySelectorAll('button.remove').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const id = Number(e.target.dataset.id);
+        newFiles = newFiles.filter(f=>f.id!==id);
+        await rebuildNewRun();
+      });
+    });
+    updateCompareState();
+  }
+
+  // Re-parse everything currently in histFiles/newFiles from their stored File objects.
+  // (Kept simple: we keep the original File objects on each entry.)
+  async function rebuildHistorical(){
+    historicalKeys = new Set();
+    for (const entry of histFiles){
+      await processHistoricalFile(entry, entry.file);
+    }
+    renderHistList();
+  }
+  async function rebuildNewRun(){
+    newRunRows = [];
+    for (const entry of newFiles){
+      await processNewRunFile(entry, entry.file);
+    }
+    renderNewList();
+  }
+
+  function updateCompareState(){
+    const okHist = histFiles.some(f=>f.status==='ok');
+    const okNew = newFiles.some(f=>f.status==='ok');
+    document.getElementById('btn-compare').disabled = !(okHist && okNew);
+    const pre = document.getElementById('pre-stat');
+    if (okHist && okNew){
+      pre.textContent = 'Ready — ' + histFiles.filter(f=>f.status==='ok').length + ' historical file(s) and ' +
+        newFiles.filter(f=>f.status==='ok').length + ' new-run file(s) parsed. Click "Find new brands" to compare.';
+    } else {
+      pre.textContent = 'Load at least one historical file and one new-run file to compare.';
+    }
+  }
+
+  // ---------- upload wiring ----------
+  function wireDrop(dropId, inputId, onFiles){
+    const drop = document.getElementById(dropId);
+    const input = document.getElementById(inputId);
+    drop.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => { onFiles(Array.from(input.files)); input.value = ''; });
+    ['dragenter','dragover'].forEach(evt=>{
+      drop.addEventListener(evt, e=>{ e.preventDefault(); drop.classList.add('drag'); });
+    });
+    ['dragleave','drop'].forEach(evt=>{
+      drop.addEventListener(evt, e=>{ e.preventDefault(); drop.classList.remove('drag'); });
+    });
+    drop.addEventListener('drop', e=>{
+      const files = Array.from(e.dataTransfer.files || []);
+      if (files.length) onFiles(files);
+    });
+  }
+
+  wireDrop('drop-hist','input-hist', async (files)=>{
+    for (const file of files){
+      const entry = { id: ++uid, name: file.name, file, type: detectMediaType(file.name), status:'pending', rowCount:0, comboCount:0 };
+      histFiles.push(entry);
+      await processHistoricalFile(entry, file);
+    }
+    renderHistList();
+  });
+
+  wireDrop('drop-new','input-new', async (files)=>{
+    for (const file of files){
+      const entry = { id: ++uid, name: file.name, file, status:'pending', rowCount:0 };
+      newFiles.push(entry);
+      await processNewRunFile(entry, file);
+    }
+    renderNewList();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', ()=>{
+    histFiles = []; newFiles = []; historicalKeys = new Set(); newRunRows = [];
+    renderHistList(); renderNewList();
+    document.getElementById('results').style.display = 'none';
+  });
+
+  // ---------- compare ----------
+  let lastResults = [];
+
+  document.getElementById('btn-compare').addEventListener('click', ()=>{
+    // Dedupe new-run rows by key, first occurrence wins.
+    const seen = new Map();
+    for (const row of newRunRows){
+      if (!seen.has(row.key)) seen.set(row.key, row);
+    }
+    const uniqueNew = Array.from(seen.values());
+    const diff = uniqueNew.filter(row => !historicalKeys.has(row.key));
+
+    diff.sort((a,b)=>{
+      return (a.category+a.subCategory+a.advertiser+a.brand)
+        .localeCompare(b.category+b.subCategory+b.advertiser+b.brand);
+    });
+
+    lastResults = diff;
+
+    document.getElementById('stat-hist-combos').textContent = historicalKeys.size.toLocaleString();
+    document.getElementById('stat-new-rows').textContent = newRunRows.length.toLocaleString();
+    document.getElementById('stat-new-combos').textContent = uniqueNew.length.toLocaleString();
+    document.getElementById('stat-diff').textContent = diff.length.toLocaleString();
+    document.getElementById('result-count').textContent = diff.length.toLocaleString() + (diff.length===1 ? ' new combo' : ' new combos');
+
+    const body = document.getElementById('result-body');
+    if (diff.length){
+      body.innerHTML = diff.map(r => `
+        <tr>
+          <td>${escapeHtml(r.category)}</td>
+          <td>${escapeHtml(r.subCategory)}</td>
+          <td>${escapeHtml(r.advertiser)}</td>
+          <td>${escapeHtml(r.product)}</td>
+          <td>${escapeHtml(r.brand)}</td>
+        </tr>`).join('');
+    } else {
+      body.innerHTML = `<tr><td colspan="5" class="empty-state">No new Advertiser/Product/Brand combinations — everything in the new run already appears in the historical files.</td></tr>`;
+    }
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  document.getElementById('btn-download').addEventListener('click', ()=>{
+    const header = ['Category','Sub-Category','Advertiser','Product','Brand'];
+    const aoa = [header, ...lastResults.map(r => [r.category, r.subCategory, r.advertiser, r.product, r.brand])];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch:26},{wch:30},{wch:30},{wch:32},{wch:32}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'New Brands');
+    const stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `New_Entrants_${stamp}.xlsx`);
+    document.getElementById('download-note').textContent = 'Saved as New_Entrants_' + stamp + '.xlsx';
+  });
+
+  renderHistList();
+  renderNewList();
+
+})();
+</script>
+
+</body>
+</html>
