@@ -10,26 +10,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
-    --ink:#151a18;
-    --paper:#eef1ee;
+    --ink:#141917;
+    --paper:#eef1ed;
     --panel:#ffffff;
-    --line:#d7ddd8;
-    --line-soft:#e6e9e5;
+    --line:#d9dfd9;
+    --line-soft:#e8ebe6;
     --teal:#0b6e4f;
     --teal-dark:#08543c;
+    --teal-tint:#e2f2e9;
     --amber:#c9822c;
-    --amber-soft:#fbeedb;
+    --amber-dark:#a5661a;
+    --amber-tint:#fbeedb;
     --red:#a4372a;
-    --muted:#5b655f;
+    --muted:#5c665f;
     font-family: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, sans-serif;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--paper);
+    background:
+      radial-gradient(1100px 480px at 12% -8%, rgba(11,110,79,0.07), transparent 60%),
+      radial-gradient(900px 420px at 100% 0%, rgba(201,130,44,0.06), transparent 55%),
+      var(--paper);
     color:var(--ink);
     -webkit-font-smoothing:antialiased;
-    padding-bottom:80px;
+    padding-bottom:90px;
   }
   h1,h2,h3{
     font-family:'Space Grotesk', system-ui, sans-serif;
@@ -37,97 +42,200 @@
     letter-spacing:-0.01em;
   }
   .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:var(--teal-dark);}
 
   /* ---------- header ---------- */
   header.top{
-    background:var(--ink);
+    background:linear-gradient(180deg, #171d1a 0%, var(--ink) 100%);
     color:#f2f4f2;
-    padding:34px clamp(20px,4vw,56px) 30px;
+    padding:38px clamp(20px,4vw,56px) 32px;
     border-bottom:4px solid var(--teal);
+    position:relative;
+    overflow:hidden;
+  }
+  header.top::after{
+    content:"";
+    position:absolute;
+    right:-60px; top:-90px;
+    width:280px; height:280px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(201,130,44,0.18), transparent 70%);
   }
   header.top .kicker{
     color:#9fb8ac;
     font-size:13px;
     margin-bottom:8px;
     font-family:'IBM Plex Mono', monospace;
+    position:relative;
   }
   header.top h1{
     font-size:clamp(24px,3vw,34px);
     color:#fdfdfb;
+    position:relative;
   }
   header.top p{
-    max-width:64ch;
+    max-width:66ch;
     color:#c7cec9;
     font-size:15px;
-    line-height:1.55;
+    line-height:1.6;
     margin-top:12px;
+    position:relative;
   }
+  .flow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:22px;
+    flex-wrap:wrap;
+    position:relative;
+  }
+  .flow .chip{
+    display:inline-flex; align-items:center; gap:7px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    color:#e7ebe8;
+    padding:6px 13px 6px 10px;
+    border-radius:20px;
+    font-size:12.5px;
+  }
+  .flow .chip .n{
+    background:var(--teal);
+    color:#fff;
+    width:17px;height:17px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:10.5px; font-family:'IBM Plex Mono',monospace;
+  }
+  .flow .arrow{ color:#5f6b64; font-size:14px; }
 
   main{
-    max-width:1180px;
+    max-width:1280px;
     margin:0 auto;
-    padding:36px clamp(16px,4vw,40px) 0;
+    padding:40px clamp(16px,4vw,40px) 0;
   }
+
+  .section-label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0 0 16px;
+  }
+  .section-label .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    padding:3px 10px;
+    border-radius:3px;
+    font-weight:500;
+  }
+  .tag.group-a{ background:var(--teal-tint); color:var(--teal-dark); }
+  .tag.group-b{ background:var(--amber-tint); color:var(--amber-dark); }
+  .section-label h2{ font-size:16px; color:var(--muted); font-weight:500; font-family:'IBM Plex Sans',sans-serif; }
 
   .steps{
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:22px;
   }
-  @media (max-width:880px){ .steps{grid-template-columns:1fr;} }
+  @media (max-width:1080px){ .steps{grid-template-columns:1fr 1fr;} }
+  @media (max-width:700px){ .steps{grid-template-columns:1fr;} }
 
   .panel{
     background:var(--panel);
     border:1px solid var(--line);
-    border-radius:4px;
+    border-radius:8px;
     display:flex;
     flex-direction:column;
-    min-height:100%;
+    box-shadow:0 1px 2px rgba(20,25,23,0.03);
+    transition:box-shadow .15s, border-color .15s;
   }
+  .panel:hover{ box-shadow:0 4px 14px rgba(20,25,23,0.06); border-color:#cdd6cd; }
+
   .panel-head{
-    padding:20px 22px 16px;
+    padding:20px 22px 14px;
     border-bottom:1px solid var(--line-soft);
     display:flex;
-    align-items:baseline;
+    align-items:center;
     gap:10px;
   }
   .panel-head .step-num{
     font-family:'IBM Plex Mono', monospace;
     font-size:13px;
-    color:var(--teal-dark);
-    border:1px solid var(--teal-dark);
+    color:#fff;
+    background:var(--teal);
     border-radius:50%;
-    width:22px;height:22px;
+    width:24px;height:24px;
     display:inline-flex;align-items:center;justify-content:center;
     flex-shrink:0;
   }
-  .panel-head h2{font-size:18px;}
+  .group-b .panel-head .step-num{ background:var(--amber-dark); }
+  .panel-head h2{font-size:17px;}
+  .panel-head .file-count{
+    margin-left:auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--teal-dark);
+    background:var(--teal-tint);
+    padding:4px 10px;
+    border-radius:10px;
+    white-space:nowrap;
+  }
+  .group-b .panel-head .file-count{ color:var(--amber-dark); background:var(--amber-tint); }
+
   .panel-head .sub{
     color:var(--muted);
     font-size:13px;
-    padding:0 22px 14px;
-    margin-top:-6px;
-    line-height:1.5;
+    padding:12px 22px 14px;
+    line-height:1.55;
+    text-align:center;
+    border-bottom:1px solid var(--line-soft);
   }
 
-  .drop{
-    margin:0 22px 18px;
-    border:1.5px dashed var(--line);
+  .type-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 22px 0;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .type-row select{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    border:1px solid var(--line);
     border-radius:4px;
-    padding:22px;
+    padding:6px 10px;
+    background:#fafbfa;
+    color:var(--ink);
+    font-weight:500;
+    cursor:pointer;
+  }
+  .type-row select:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+
+  .drop{
+    margin:16px 22px 18px;
+    border:1.5px dashed var(--line);
+    border-radius:6px;
+    padding:34px 22px;
     text-align:center;
     color:var(--muted);
     font-size:13.5px;
     cursor:pointer;
-    transition:border-color .15s, background .15s;
+    transition:border-color .15s, background .15s, transform .1s;
     background:#fafbfa;
   }
-  .drop:hover, .drop.drag{
+  .drop svg{ display:block; margin:0 auto 10px; opacity:0.55; }
+  .drop:hover{
     border-color:var(--teal);
     background:#f1f7f4;
     color:var(--teal-dark);
   }
-  .drop strong{color:var(--ink);}
+  .drop:hover svg{ opacity:0.85; }
+  .drop.drag{
+    border-color:var(--teal);
+    background:#eaf5ee;
+    transform:scale(1.01);
+  }
+  .drop strong{color:var(--ink); font-size:14.5px;}
+  .drop .hint{ margin-top:5px; font-size:12px; color:#8b948e; }
   .drop input{display:none;}
 
   .file-list{
@@ -139,15 +247,16 @@
   }
   .file-row{
     border:1px solid var(--line-soft);
-    border-radius:3px;
+    border-radius:5px;
     padding:10px 12px;
     display:grid;
     grid-template-columns:1fr auto auto auto;
     align-items:center;
     gap:10px;
-    font-size:13px;
+    font-size:12.5px;
     background:#fbfcfb;
   }
+  .file-row.narrow{ grid-template-columns:1fr auto auto; }
   .file-row .fname{
     overflow:hidden;
     text-overflow:ellipsis;
@@ -156,12 +265,12 @@
   }
   .file-row .fmeta{
     color:var(--muted);
-    font-size:12px;
+    font-size:11.5px;
     white-space:nowrap;
   }
   .file-row select{
     font-family:'IBM Plex Mono', monospace;
-    font-size:12px;
+    font-size:11.5px;
     border:1px solid var(--line);
     border-radius:3px;
     padding:3px 6px;
@@ -169,13 +278,13 @@
     color:var(--ink);
   }
   .file-row .status{
-    font-size:11px;
+    font-size:10.5px;
     font-family:'IBM Plex Mono', monospace;
     padding:2px 7px;
     border-radius:9px;
     white-space:nowrap;
   }
-  .status.ok{background:#e2f2e9;color:var(--teal-dark);}
+  .status.ok{background:var(--teal-tint);color:var(--teal-dark);}
   .status.err{background:#f7e3df;color:var(--red);}
   .file-row button.remove{
     border:none;background:none;color:var(--muted);cursor:pointer;
@@ -185,14 +294,14 @@
 
   .empty-note{
     color:#8b948e;
-    font-size:13px;
-    padding:8px 22px 20px;
+    font-size:12.5px;
+    padding:2px 22px 20px;
     font-style:italic;
   }
 
-  /* ---------- stats + actions ---------- */
+  /* ---------- action bar ---------- */
   .action-bar{
-    margin-top:28px;
+    margin-top:30px;
     display:flex;
     align-items:center;
     gap:16px;
@@ -202,39 +311,40 @@
     background:var(--teal);
     color:#fff;
     border:none;
-    padding:13px 26px;
+    padding:14px 28px;
     font-size:14.5px;
     font-weight:600;
-    border-radius:3px;
+    border-radius:5px;
     cursor:pointer;
     font-family:'IBM Plex Sans', sans-serif;
-    transition:background .15s;
+    transition:background .15s, transform .1s;
   }
   button.primary:hover{background:var(--teal-dark);}
+  button.primary:active{ transform:translateY(1px); }
   button.primary:disabled{background:#b9c2bd;cursor:not-allowed;}
 
   button.ghost{
     background:none;
     border:1px solid var(--line);
     color:var(--muted);
-    padding:12px 18px;
-    border-radius:3px;
+    padding:13px 18px;
+    border-radius:5px;
     cursor:pointer;
     font-size:13.5px;
   }
   button.ghost:hover{border-color:var(--red);color:var(--red);}
 
   .stat-strip{
-    margin-top:8px;
+    margin-top:10px;
     color:var(--muted);
     font-size:13px;
   }
 
   /* ---------- results ---------- */
   section.results{
-    margin-top:40px;
+    margin-top:46px;
     border-top:1px solid var(--line);
-    padding-top:32px;
+    padding-top:34px;
   }
   .results-head{
     display:flex;
@@ -242,43 +352,45 @@
     align-items:flex-end;
     flex-wrap:wrap;
     gap:14px;
-    margin-bottom:18px;
+    margin-bottom:20px;
   }
-  .results-head h2{font-size:20px;}
+  .results-head h2{font-size:21px;}
   .results-head .count{
     font-family:'IBM Plex Mono', monospace;
-    color:var(--amber);
+    color:var(--amber-dark);
     font-weight:600;
   }
   .stat-cards{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(5,1fr);
     gap:14px;
-    margin-bottom:26px;
+    margin-bottom:28px;
   }
-  @media (max-width:760px){ .stat-cards{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:900px){ .stat-cards{grid-template-columns:repeat(2,1fr);} }
   .stat-card{
     background:var(--panel);
     border:1px solid var(--line);
-    border-radius:4px;
+    border-radius:6px;
     padding:16px 18px;
   }
   .stat-card .num{
     font-family:'Space Grotesk', sans-serif;
-    font-size:26px;
+    font-size:25px;
     font-weight:600;
   }
   .stat-card .label{
-    font-size:12.5px;
+    font-size:12px;
     color:var(--muted);
     margin-top:2px;
+    line-height:1.4;
   }
-  .stat-card.highlight .num{color:var(--amber);}
+  .stat-card.highlight{ border-color:#e7c9a1; background:#fffaf3; }
+  .stat-card.highlight .num{color:var(--amber-dark);}
 
   .table-wrap{
     background:var(--panel);
     border:1px solid var(--line);
-    border-radius:4px;
+    border-radius:6px;
     overflow:auto;
     max-height:560px;
   }
@@ -295,7 +407,7 @@
     padding:11px 14px;
     font-weight:500;
     font-family:'IBM Plex Mono', monospace;
-    font-size:11.5px;
+    font-size:11px;
   }
   tbody td{
     padding:9px 14px;
@@ -305,9 +417,19 @@
   tbody tr:hover{background:#f7f9f6;}
   tbody tr:nth-child(even){background:#fbfcfb;}
   tbody tr:nth-child(even):hover{background:#f4f7f4;}
+  .sys-pill{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:9px;
+    background:var(--teal-tint);
+    color:var(--teal-dark);
+  }
+  .sys-pill.tv{ background:var(--amber-tint); color:var(--amber-dark); }
 
   .download-row{
-    margin-top:22px;
+    margin-top:24px;
     display:flex;
     gap:14px;
     align-items:center;
@@ -322,12 +444,12 @@
   }
 
   footer.note{
-    max-width:1180px;
-    margin:60px auto 0;
+    max-width:1280px;
+    margin:64px auto 0;
     padding:0 clamp(16px,4vw,40px);
     color:#8b948e;
     font-size:12px;
-    line-height:1.6;
+    line-height:1.65;
   }
 </style>
 </head>
@@ -336,7 +458,15 @@
 <header class="top">
   <div class="kicker">PROJECT DIAMOND — TOTAL PHARMA + PC</div>
   <h1>New Entrant Finder</h1>
-  <p>Upload the historical monitoring exports on one side and the latest competitive brand list on the other. The tool matches on Advertiser + Product + Brand and returns every combination in the new run that has never shown up before.</p>
+  <p>Upload the historical monitoring exports, the latest Competitive Set report, and (separately) the latest TV run. The tool matches on Advertiser + Product + Brand + Media System and returns every combination that has never shown up before.</p>
+  <div class="flow">
+    <span class="chip"><span class="n">1</span> Historical runs</span>
+    <span class="arrow">→</span>
+    <span class="chip"><span class="n">2</span> Competitive Set (Digital/Radio/OOH/Print)</span>
+    <span class="chip"><span class="n">3</span> TV new run</span>
+    <span class="arrow">→</span>
+    <span class="chip">New entrants</span>
+  </div>
 </header>
 
 <main>
@@ -344,16 +474,29 @@
   <div class="steps">
 
     <!-- HISTORICAL -->
-    <div class="panel">
+    <div class="panel" id="panel-hist">
       <div class="panel-head">
         <span class="step-num">1</span>
         <h2>Historical runs</h2>
+        <span class="file-count" id="count-hist">0 files loaded</span>
       </div>
-      <div class="sub">TV, Digital, OOH, Print, and Radio exports (.csv or .xlsx). Add as many as you have — media type is guessed from the filename and can be corrected below.</div>
+      <div class="sub">Any mix of TV, Digital, OOH, Print and Radio exports (.csv or .xlsx). Tag each batch with its media system before dropping it in — you can still correct it per file afterwards.</div>
+
+      <div class="type-row">
+        Tag next upload as:
+        <select id="hist-type-select">
+          <option value="DIGITAL">Digital</option>
+          <option value="RADIO">Radio</option>
+          <option value="OOH">OOH</option>
+          <option value="PRINT">Print</option>
+          <option value="TV">TV</option>
+        </select>
+      </div>
 
       <div class="drop" id="drop-hist">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
         <div><strong>Drop files here</strong> or click to browse</div>
-        <div style="margin-top:4px;">.csv, .xlsx, .xls — multiple files accepted</div>
+        <div class="hint">.csv, .xlsx, .xls — multiple files accepted</div>
         <input type="file" id="input-hist" multiple accept=".csv,.xlsx,.xls">
       </div>
 
@@ -361,22 +504,44 @@
       <div class="empty-note" id="empty-hist">No historical files loaded yet.</div>
     </div>
 
-    <!-- NEW RUN -->
-    <div class="panel">
+    <!-- NEW RUN: COMPETITIVE SET -->
+    <div class="panel" id="panel-new-a">
       <div class="panel-head">
         <span class="step-num">2</span>
-        <h2>New data run</h2>
+        <h2>Competitive Set</h2>
+        <span class="file-count" id="count-new-a">0 files loaded</span>
       </div>
-      <div class="sub">The latest Competitive Brand List export (or similar) with Category, Sub-Category, Advertiser, Product and Brand columns.</div>
+      <div class="sub">The latest Competitive Set export — Category, Sub-Category, Advertiser, Product, Brand and System columns. Covers Digital, Radio, OOH and Print; any TV rows in here are set aside for the TV file instead.</div>
 
-      <div class="drop" id="drop-new">
+      <div class="drop" id="drop-new-a">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
         <div><strong>Drop files here</strong> or click to browse</div>
-        <div style="margin-top:4px;">.csv, .xlsx, .xls — multiple files accepted</div>
-        <input type="file" id="input-new" multiple accept=".csv,.xlsx,.xls">
+        <div class="hint">.csv, .xlsx, .xls — multiple files accepted</div>
+        <input type="file" id="input-new-a" multiple accept=".csv,.xlsx,.xls">
       </div>
 
-      <div class="file-list" id="list-new"></div>
-      <div class="empty-note" id="empty-new">No new-run files loaded yet.</div>
+      <div class="file-list" id="list-new-a"></div>
+      <div class="empty-note" id="empty-new-a">No Competitive Set files loaded yet.</div>
+    </div>
+
+    <!-- NEW RUN: TV -->
+    <div class="panel group-b" id="panel-new-b">
+      <div class="panel-head">
+        <span class="step-num">3</span>
+        <h2>TV new run</h2>
+        <span class="file-count" id="count-new-b">0 files loaded</span>
+      </div>
+      <div class="sub">TV runs its own separate report — no Category or System column, just Advertiser, Product and Brand. Drop the latest TV export here; it's compared only against the TV-tagged historical files.</div>
+
+      <div class="drop" id="drop-new-b">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+        <div><strong>Drop files here</strong> or click to browse</div>
+        <div class="hint">.csv, .xlsx, .xls — multiple files accepted</div>
+        <input type="file" id="input-new-b" multiple accept=".csv,.xlsx,.xls">
+      </div>
+
+      <div class="file-list" id="list-new-b"></div>
+      <div class="empty-note" id="empty-new-b">No TV new-run files loaded yet.</div>
     </div>
 
   </div>
@@ -385,7 +550,7 @@
     <button class="primary" id="btn-compare" disabled>Find new brands</button>
     <button class="ghost" id="btn-reset">Clear everything</button>
   </div>
-  <div class="stat-strip" id="pre-stat">Load at least one historical file and one new-run file to compare.</div>
+  <div class="stat-strip" id="pre-stat">Load at least one historical file and one new-run file (Competitive Set or TV) to compare.</div>
 
   <section class="results" id="results" style="display:none;">
     <div class="results-head">
@@ -396,7 +561,7 @@
     <div class="stat-cards">
       <div class="stat-card">
         <div class="num" id="stat-hist-combos">0</div>
-        <div class="label">Unique Advertiser/Product/Brand combos, historical</div>
+        <div class="label">Unique combos, historical (Advertiser + Product + Brand + System)</div>
       </div>
       <div class="stat-card">
         <div class="num" id="stat-new-rows">0</div>
@@ -405,6 +570,10 @@
       <div class="stat-card">
         <div class="num" id="stat-new-combos">0</div>
         <div class="label">Unique combos in new run</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="stat-tv-skipped">0</div>
+        <div class="label">TV rows set aside from Competitive Set</div>
       </div>
       <div class="stat-card highlight">
         <div class="num" id="stat-diff">0</div>
@@ -421,6 +590,7 @@
             <th>Advertiser</th>
             <th>Product</th>
             <th>Brand</th>
+            <th>System</th>
           </tr>
         </thead>
         <tbody id="result-body"></tbody>
@@ -436,46 +606,38 @@
 </main>
 
 <footer class="note">
-  Runs entirely in your browser — files are parsed locally and never uploaded anywhere. Matching is exact on the trimmed, case-insensitive combination of Advertiser, Product and Brand, so near-duplicate spellings between the historical and new-run files (e.g. an extra space or a different case) will still be treated as the same brand, but genuinely different naming will show up as "new."
+  Runs entirely in your browser — files are parsed locally and never uploaded anywhere. Matching is exact on the trimmed, case-insensitive combination of Advertiser, Product, Brand and Media System (OOH and "Outdoor" are treated as the same system), so near-duplicate spellings between files still count as a match, but genuinely different naming shows up as "new." TV is matched separately from the other four systems since it doesn't share the Competitive Set's Category/Sub-Category/System format.
 </footer>
 
 <script>
 (function(){
 
   // ---------- state ----------
-  let histFiles = [];   // {id, name, type, rowCount, comboCount, status, error}
-  let newFiles  = [];   // {id, name, rowCount, status, error}
+  let histFiles = [];    // {id, name, file, type, rowCount, comboCount, status, error}
+  let newAFiles = [];    // Competitive Set files {id, name, file, rowCount, tvSkipped, status, error}
+  let newBFiles = [];    // TV new-run files {id, name, file, rowCount, status, error}
   let historicalKeys = new Set();
-  let newRunRows = [];  // {category, subCategory, advertiser, product, brand, key}
+  let newRunRows = [];   // {category, subCategory, advertiser, product, brand, system, key}
+  let totalTvSkipped = 0;
   let uid = 0;
 
-  const MEDIA_PATTERNS = [
-    ['TV', /\btv\b/i],
-    ['Digital', /\bdigital\b/i],
-    ['OOH', /\booh\b/i],
-    ['Radio', /\bradio\b/i],
-    ['Print', /\bprint\b/i],
-  ];
-
-  function detectMediaType(filename){
-    for (const [label, re] of MEDIA_PATTERNS){
-      if (re.test(filename)) return label;
-    }
-    return 'Unknown';
-  }
+  const SYSTEM_LABEL = { DIGITAL:'Digital', RADIO:'Radio', OOH:'OOH', PRINT:'Print', TV:'TV' };
 
   function norm(v){
     return (v === null || v === undefined) ? '' : v.toString().trim().replace(/\s+/g,' ');
   }
-  function normKey(v){
-    return norm(v).toUpperCase();
+  function normKey(v){ return norm(v).toUpperCase(); }
+  function normalizeSystem(v){
+    const s = normKey(v);
+    if (s === 'OOH' || s === 'OUTDOOR' || s === 'OUT OF HOME') return 'OOH';
+    if (s === 'TELEVISION') return 'TV';
+    if (SYSTEM_LABEL[s]) return s;
+    return s || 'UNKNOWN';
   }
-  function makeKey(adv, prod, brand){
-    return normKey(adv) + '\u241F' + normKey(prod) + '\u241F' + normKey(brand);
+  function makeKey(adv, prod, brand, system){
+    return normKey(adv) + '\u241F' + normKey(prod) + '\u241F' + normKey(brand) + '\u241F' + normalizeSystem(system);
   }
 
-  // Scan a sheet (array-of-arrays) for a header row containing every required column.
-  // requiredCols: { key: [acceptable header variants, lowercase] }
   function findHeader(rows, requiredCols){
     const keys = Object.keys(requiredCols);
     for (let r = 0; r < rows.length; r++){
@@ -510,14 +672,11 @@
 
   // ---------- HISTORICAL processing ----------
   async function processHistoricalFile(entry, file){
-    const required = {
-      advertiser: ['advertiser'],
-      product: ['product'],
-      brand: ['brand'],
-    };
+    const required = { advertiser: ['advertiser'], product: ['product'], brand: ['brand'] };
     try {
       const wb = await fileToWorkbook(file);
       let totalRows = 0, comboSet = new Set(), found = false;
+      const system = normalizeSystem(entry.type);
 
       for (const sheetName of wb.SheetNames){
         const rows = sheetToRows(wb.Sheets[sheetName]);
@@ -531,7 +690,7 @@
           const prod = row[hdr.colMap.product];
           const brand = row[hdr.colMap.brand];
           if (!norm(adv) && !norm(prod) && !norm(brand)) continue;
-          const key = makeKey(adv, prod, brand);
+          const key = makeKey(adv, prod, brand, system);
           historicalKeys.add(key);
           comboSet.add(key);
           totalRows++;
@@ -554,18 +713,19 @@
     }
   }
 
-  // ---------- NEW RUN processing ----------
-  async function processNewRunFile(entry, file){
+  // ---------- NEW RUN A (Competitive Set) processing ----------
+  async function processNewAFile(entry, file){
     const required = {
       category: ['category'],
       subCategory: ['sub-category', 'sub category', 'subcategory'],
       advertiser: ['advertiser'],
       product: ['product'],
       brand: ['brand'],
+      system: ['system'],
     };
     try {
       const wb = await fileToWorkbook(file);
-      let totalRows = 0, found = false;
+      let totalRows = 0, tvSkipped = 0, found = false;
 
       for (const sheetName of wb.SheetNames){
         const rows = sheetToRows(wb.Sheets[sheetName]);
@@ -581,15 +741,59 @@
           const prod = norm(row[hdr.colMap.product]);
           const brand = norm(row[hdr.colMap.brand]);
           if (!adv && !prod && !brand) continue;
-          const key = makeKey(adv, prod, brand);
-          newRunRows.push({ category, subCategory, advertiser: adv, product: prod, brand, key });
+          const system = normalizeSystem(row[hdr.colMap.system]);
+          if (system === 'TV'){ tvSkipped++; continue; }
+          const key = makeKey(adv, prod, brand, system);
+          newRunRows.push({ category, subCategory, advertiser: adv, product: prod, brand, system, key });
           totalRows++;
         }
       }
 
       if (!found){
         entry.status = 'err';
-        entry.error = 'No Category/Sub-Category/Advertiser/Product/Brand header row found';
+        entry.error = 'No Category/Sub-Category/Advertiser/Product/Brand/System header row found';
+        entry.rowCount = 0;
+        entry.tvSkipped = 0;
+      } else {
+        entry.status = 'ok';
+        entry.rowCount = totalRows;
+        entry.tvSkipped = tvSkipped;
+        totalTvSkipped += tvSkipped;
+      }
+    } catch (e){
+      entry.status = 'err';
+      entry.error = 'Could not read file (' + (e.message || 'parse error') + ')';
+    }
+  }
+
+  // ---------- NEW RUN B (TV) processing ----------
+  async function processNewBFile(entry, file){
+    const required = { advertiser: ['advertiser'], product: ['product'], brand: ['brand'] };
+    try {
+      const wb = await fileToWorkbook(file);
+      let totalRows = 0, found = false;
+
+      for (const sheetName of wb.SheetNames){
+        const rows = sheetToRows(wb.Sheets[sheetName]);
+        const hdr = findHeader(rows, required);
+        if (!hdr) continue;
+        found = true;
+        for (let r = hdr.headerRow + 1; r < rows.length; r++){
+          const row = rows[r];
+          if (!row) continue;
+          const adv = norm(row[hdr.colMap.advertiser]);
+          const prod = norm(row[hdr.colMap.product]);
+          const brand = norm(row[hdr.colMap.brand]);
+          if (!adv && !prod && !brand) continue;
+          const key = makeKey(adv, prod, brand, 'TV');
+          newRunRows.push({ category: '', subCategory: '', advertiser: adv, product: prod, brand, system: 'TV', key });
+          totalRows++;
+        }
+      }
+
+      if (!found){
+        entry.status = 'err';
+        entry.error = 'No Advertiser/Product/Brand header row found';
         entry.rowCount = 0;
       } else {
         entry.status = 'ok';
@@ -607,11 +811,12 @@
     const empty = document.getElementById('empty-hist');
     list.innerHTML = '';
     empty.style.display = histFiles.length ? 'none' : 'block';
+    document.getElementById('count-hist').textContent = histFiles.length + (histFiles.length===1 ? ' file loaded' : ' files loaded');
     for (const entry of histFiles){
       const row = document.createElement('div');
       row.className = 'file-row';
-      const typeOptions = ['TV','Digital','OOH','Print','Radio','Unknown']
-        .map(t => `<option value="${t}" ${t===entry.type?'selected':''}>${t}</option>`).join('');
+      const typeOptions = ['DIGITAL','RADIO','OOH','PRINT','TV']
+        .map(t => `<option value="${t}" ${t===entry.type?'selected':''}>${SYSTEM_LABEL[t]}</option>`).join('');
       row.innerHTML = `
         <span class="fname" title="${entry.name}">${entry.name}</span>
         <select data-id="${entry.id}" class="type-select">${typeOptions}</select>
@@ -626,10 +831,11 @@
       list.appendChild(row);
     }
     list.querySelectorAll('.type-select').forEach(sel=>{
-      sel.addEventListener('change', e=>{
+      sel.addEventListener('change', async e=>{
         const id = Number(e.target.dataset.id);
         const entry = histFiles.find(f=>f.id===id);
         if (entry) entry.type = e.target.value;
+        await rebuildHistorical();
       });
     });
     list.querySelectorAll('button.remove').forEach(btn=>{
@@ -642,15 +848,15 @@
     updateCompareState();
   }
 
-  function renderNewList(){
-    const list = document.getElementById('list-new');
-    const empty = document.getElementById('empty-new');
+  function renderNewList(files, listId, emptyId, countId){
+    const list = document.getElementById(listId);
+    const empty = document.getElementById(emptyId);
     list.innerHTML = '';
-    empty.style.display = newFiles.length ? 'none' : 'block';
-    for (const entry of newFiles){
+    empty.style.display = files.length ? 'none' : 'block';
+    document.getElementById(countId).textContent = files.length + (files.length===1 ? ' file loaded' : ' files loaded');
+    for (const entry of files){
       const row = document.createElement('div');
-      row.className = 'file-row';
-      row.style.gridTemplateColumns = '1fr auto auto';
+      row.className = 'file-row narrow';
       row.innerHTML = `
         <span class="fname" title="${entry.name}">${entry.name}</span>
         <span class="fmeta">${entry.status==='ok' ? entry.rowCount.toLocaleString()+' rows' : ''}</span>
@@ -666,15 +872,15 @@
     list.querySelectorAll('button.remove').forEach(btn=>{
       btn.addEventListener('click', async e=>{
         const id = Number(e.target.dataset.id);
-        newFiles = newFiles.filter(f=>f.id!==id);
-        await rebuildNewRun();
+        if (files === newAFiles) { newAFiles = newAFiles.filter(f=>f.id!==id); await rebuildNewA(); }
+        else { newBFiles = newBFiles.filter(f=>f.id!==id); await rebuildNewB(); }
       });
     });
     updateCompareState();
   }
+  function renderNewAList(){ renderNewList(newAFiles, 'list-new-a', 'empty-new-a', 'count-new-a'); }
+  function renderNewBList(){ renderNewList(newBFiles, 'list-new-b', 'empty-new-b', 'count-new-b'); }
 
-  // Re-parse everything currently in histFiles/newFiles from their stored File objects.
-  // (Kept simple: we keep the original File objects on each entry.)
   async function rebuildHistorical(){
     historicalKeys = new Set();
     for (const entry of histFiles){
@@ -682,24 +888,34 @@
     }
     renderHistList();
   }
-  async function rebuildNewRun(){
+  async function rebuildNewA(){
     newRunRows = [];
-    for (const entry of newFiles){
-      await processNewRunFile(entry, entry.file);
-    }
-    renderNewList();
+    totalTvSkipped = 0;
+    for (const entry of newAFiles) await processNewAFile(entry, entry.file);
+    for (const entry of newBFiles) await processNewBFile(entry, entry.file);
+    renderNewAList();
+    renderNewBList();
+  }
+  async function rebuildNewB(){
+    newRunRows = [];
+    totalTvSkipped = 0;
+    for (const entry of newAFiles) await processNewAFile(entry, entry.file);
+    for (const entry of newBFiles) await processNewBFile(entry, entry.file);
+    renderNewAList();
+    renderNewBList();
   }
 
   function updateCompareState(){
     const okHist = histFiles.some(f=>f.status==='ok');
-    const okNew = newFiles.some(f=>f.status==='ok');
+    const okNew = newAFiles.some(f=>f.status==='ok') || newBFiles.some(f=>f.status==='ok');
     document.getElementById('btn-compare').disabled = !(okHist && okNew);
     const pre = document.getElementById('pre-stat');
     if (okHist && okNew){
-      pre.textContent = 'Ready — ' + histFiles.filter(f=>f.status==='ok').length + ' historical file(s) and ' +
-        newFiles.filter(f=>f.status==='ok').length + ' new-run file(s) parsed. Click "Find new brands" to compare.';
+      const nHist = histFiles.filter(f=>f.status==='ok').length;
+      const nNew = newAFiles.filter(f=>f.status==='ok').length + newBFiles.filter(f=>f.status==='ok').length;
+      pre.textContent = 'Ready — ' + nHist + ' historical file(s) and ' + nNew + ' new-run file(s) parsed. Click "Find new brands" to compare.';
     } else {
-      pre.textContent = 'Load at least one historical file and one new-run file to compare.';
+      pre.textContent = 'Load at least one historical file and one new-run file (Competitive Set or TV) to compare.';
     }
   }
 
@@ -722,26 +938,37 @@
   }
 
   wireDrop('drop-hist','input-hist', async (files)=>{
+    const currentType = document.getElementById('hist-type-select').value;
     for (const file of files){
-      const entry = { id: ++uid, name: file.name, file, type: detectMediaType(file.name), status:'pending', rowCount:0, comboCount:0 };
+      const entry = { id: ++uid, name: file.name, file, type: currentType, status:'pending', rowCount:0, comboCount:0 };
       histFiles.push(entry);
       await processHistoricalFile(entry, file);
     }
     renderHistList();
   });
 
-  wireDrop('drop-new','input-new', async (files)=>{
+  wireDrop('drop-new-a','input-new-a', async (files)=>{
+    for (const file of files){
+      const entry = { id: ++uid, name: file.name, file, status:'pending', rowCount:0, tvSkipped:0 };
+      newAFiles.push(entry);
+      await processNewAFile(entry, file);
+    }
+    renderNewAList();
+  });
+
+  wireDrop('drop-new-b','input-new-b', async (files)=>{
     for (const file of files){
       const entry = { id: ++uid, name: file.name, file, status:'pending', rowCount:0 };
-      newFiles.push(entry);
-      await processNewRunFile(entry, file);
+      newBFiles.push(entry);
+      await processNewBFile(entry, file);
     }
-    renderNewList();
+    renderNewBList();
   });
 
   document.getElementById('btn-reset').addEventListener('click', ()=>{
-    histFiles = []; newFiles = []; historicalKeys = new Set(); newRunRows = [];
-    renderHistList(); renderNewList();
+    histFiles = []; newAFiles = []; newBFiles = [];
+    historicalKeys = new Set(); newRunRows = []; totalTvSkipped = 0;
+    renderHistList(); renderNewAList(); renderNewBList();
     document.getElementById('results').style.display = 'none';
   });
 
@@ -749,7 +976,6 @@
   let lastResults = [];
 
   document.getElementById('btn-compare').addEventListener('click', ()=>{
-    // Dedupe new-run rows by key, first occurrence wins.
     const seen = new Map();
     for (const row of newRunRows){
       if (!seen.has(row.key)) seen.set(row.key, row);
@@ -758,8 +984,8 @@
     const diff = uniqueNew.filter(row => !historicalKeys.has(row.key));
 
     diff.sort((a,b)=>{
-      return (a.category+a.subCategory+a.advertiser+a.brand)
-        .localeCompare(b.category+b.subCategory+b.advertiser+b.brand);
+      return (a.system+a.category+a.subCategory+a.advertiser+a.brand)
+        .localeCompare(b.system+b.category+b.subCategory+b.advertiser+b.brand);
     });
 
     lastResults = diff;
@@ -767,6 +993,7 @@
     document.getElementById('stat-hist-combos').textContent = historicalKeys.size.toLocaleString();
     document.getElementById('stat-new-rows').textContent = newRunRows.length.toLocaleString();
     document.getElementById('stat-new-combos').textContent = uniqueNew.length.toLocaleString();
+    document.getElementById('stat-tv-skipped').textContent = totalTvSkipped.toLocaleString();
     document.getElementById('stat-diff').textContent = diff.length.toLocaleString();
     document.getElementById('result-count').textContent = diff.length.toLocaleString() + (diff.length===1 ? ' new combo' : ' new combos');
 
@@ -779,9 +1006,10 @@
           <td>${escapeHtml(r.advertiser)}</td>
           <td>${escapeHtml(r.product)}</td>
           <td>${escapeHtml(r.brand)}</td>
+          <td><span class="sys-pill ${r.system==='TV'?'tv':''}">${escapeHtml(SYSTEM_LABEL[r.system] || r.system)}</span></td>
         </tr>`).join('');
     } else {
-      body.innerHTML = `<tr><td colspan="5" class="empty-state">No new Advertiser/Product/Brand combinations — everything in the new run already appears in the historical files.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="6" class="empty-state">No new Advertiser/Product/Brand/System combinations — everything in the new run already appears in the historical files.</td></tr>`;
     }
 
     document.getElementById('results').style.display = 'block';
@@ -793,10 +1021,10 @@
   }
 
   document.getElementById('btn-download').addEventListener('click', ()=>{
-    const header = ['Category','Sub-Category','Advertiser','Product','Brand'];
-    const aoa = [header, ...lastResults.map(r => [r.category, r.subCategory, r.advertiser, r.product, r.brand])];
+    const header = ['Category','Sub-Category','Advertiser','Product','Brand','System'];
+    const aoa = [header, ...lastResults.map(r => [r.category, r.subCategory, r.advertiser, r.product, r.brand, SYSTEM_LABEL[r.system] || r.system])];
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = [{wch:26},{wch:30},{wch:30},{wch:32},{wch:32}];
+    ws['!cols'] = [{wch:26},{wch:30},{wch:30},{wch:32},{wch:32},{wch:10}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'New Brands');
     const stamp = new Date().toISOString().slice(0,10);
@@ -805,7 +1033,8 @@
   });
 
   renderHistList();
-  renderNewList();
+  renderNewAList();
+  renderNewBList();
 
 })();
 </script>
